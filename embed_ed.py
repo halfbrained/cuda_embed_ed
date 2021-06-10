@@ -191,6 +191,7 @@ class Hint:
         dlg_proc(h, DLG_CTL_PROP_SET, index=n, prop={
                 'align': ALIGN_CLIENT,
                 'h': FORM_H,
+                'sp_r': 2,
                 'on_click_link': self.on_click_link,
                 'on_change': self.on_text_change,
                 })
