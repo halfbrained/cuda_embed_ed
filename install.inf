@@ -1,0 +1,21 @@
+[info]
+title=Embedded Editor
+desc=Show documents in an embedded editor
+type=cudatext-plugin
+subdir=cuda_embed_ed
+homepage=https://github.com/halfbrained/cuda_embed_ed
+
+[item1]
+section=events
+events=on_close_pre
+
+[item2]
+section=commands
+caption=Embedded Editor\Toggle
+method=toggle
+
+[item3]
+section=commands
+caption=Embedded Editor\Config
+method=config
+menu=o
