@@ -4,6 +4,7 @@ desc=Show documents in an embedded editor
 type=cudatext-plugin
 subdir=cuda_embed_ed
 homepage=https://github.com/halfbrained/cuda_embed_ed
+api=1.0.393
 
 [item1]
 section=events
