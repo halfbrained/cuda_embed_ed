@@ -1,1 +1,3 @@
-# Embedded Editor (cuda_embed_ed)\n\![img](readme/screenshot.png)
+# Embedded Editor (cuda_embed_ed)
+
+![img](readme/screenshot.png)
