@@ -6,7 +6,7 @@ from cudax_lib import get_translation
 
 _   = get_translation(__file__)  # I18N
 
-fn_config = os.path.join(app_path(APP_DIR_SETTINGS), 'cuda_embed_ed.ini')
+fn_config = os.path.join(app_path(APP_DIR_SETTINGS), 'plugins.ini')
 
 ED_MAX_LINES = 24
 
@@ -46,12 +46,12 @@ class Command:
 
     def __init__(self):
         global ED_MAX_LINES
-        ED_MAX_LINES = int(ini_read(fn_config, 'op', 'editor_max_lines', str(ED_MAX_LINES)))
+        ED_MAX_LINES = int(ini_read(fn_config, 'embedded_editor', 'editor_max_lines', str(ED_MAX_LINES)))
 
         self._ed_hints = {} # editor handle -> Hint()
 
     def config(self):
-        ini_write(fn_config, 'op', 'editor_max_lines', str(ED_MAX_LINES))
+        ini_write(fn_config, 'embedded_editor', 'editor_max_lines', str(ED_MAX_LINES))
         file_open(fn_config)
 
     def on_close_pre(self, ed_self):
