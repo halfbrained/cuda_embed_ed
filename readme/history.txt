@@ -1,2 +1,5 @@
+2021.06.11
++ add: button "To new tab"
+
 2021.06.10
 initial

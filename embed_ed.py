@@ -12,6 +12,7 @@ ED_MAX_LINES = 24
 
 BTN_SAVE = 'btn_em_save'
 BTN_CLOSE = 'btn_em_close'
+BTN_NEW_TAB = 'to_new_tab'
 
 GAP_TAG = app_proc(PROC_GET_UNIQUE_TAG, '')
 USER_DIR = os.path.expanduser('~')
@@ -306,6 +307,7 @@ class Hint:
         callback_fstr = 'module=cuda_embed_ed;cmd=on_dlg_btn;info={};'
         collapsed_path = collapse_path(self.full_path)
 
+        add_statusbar_cell(_('To new tab'), cellwidth, callback_name=BTN_NEW_TAB)
         add_statusbar_cell(_('Save'), cellwidth, callback_name=BTN_SAVE)
         _caption = (self.caption  or  collapsed_path)
         if self.text_modified:
@@ -319,8 +321,13 @@ class Hint:
             self.update_statusbar()
 
     def on_btn(self, name):
-        if   name == BTN_SAVE:  self.save_text()
-        elif name == BTN_CLOSE: self.hide()
+        if   name == BTN_SAVE:
+            self.save_text()
+        elif name == BTN_CLOSE:
+            self.hide()
+        elif name == BTN_NEW_TAB:
+            self.to_new_tab()
+
 
     def on_click_link(self, id_dlg, id_ctl, data='', info=''):
         import webbrowser
@@ -335,6 +342,25 @@ class Hint:
         if key_code == VK_ESCAPE  and  not state:  # <escape> in filter - clear
             self.hide()
             return False
+
+
+    def to_new_tab(self):
+        if not self.text_modified:
+            self.hide(animate=False)
+
+        scroll_pos = self._scroll_poss.get(self.full_path)
+        carets = self.ed.get_carets()
+
+        file_open(self.full_path)
+
+        if scroll_pos:
+            ed.set_prop(PROP_SCROLL_VERT, scroll_pos[1])
+            ed.set_prop(PROP_SCROLL_HORZ, scroll_pos[0])
+
+        if carets:
+            ed.set_caret(*carets[0], options=CARET_OPTION_NO_SCROLL)
+            for caret in carets[1:]:
+                ed.set_caret(*caret, id=CARET_ADD, options=CARET_OPTION_NO_SCROLL)
 
 
     def save_text(self, dlg=False):
