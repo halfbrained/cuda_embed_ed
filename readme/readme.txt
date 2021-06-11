@@ -1,8 +1,9 @@
 Plugin for CudaText.
 
-Shows documents in an embedded editor. 
+Shows documents in an embedded editor. For example '.js' and '.css' files in HTML.
 
-For example '.js' and '.css' files in HTML.
+Adds menu item to show/hide embedded editor in the current document:
+    "Plugins > Embedded Editor > Toggle"
 
 
 Searches for a relative path between quotation marks (") in caret's position.
