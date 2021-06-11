@@ -16,7 +16,6 @@ BTN_CLOSE = 'btn_em_close'
 GAP_TAG = app_proc(PROC_GET_UNIQUE_TAG, '')
 USER_DIR = os.path.expanduser('~')
 
-
 def collapse_path(path):
     if path  and  (path + os.sep).startswith(USER_DIR + os.sep):
         path = path.replace(USER_DIR, '~', 1)
@@ -122,7 +121,12 @@ class Command:
                 return
             full_path = os.path.join(os.path.dirname(ed_fn), path_str)
 
-            embed.show(full_path, nline=caret_y, caption=path_str)
+            if os.path.exists(full_path):
+                embed.show(full_path, nline=caret_y, caption=path_str)
+
+                msg_status(_("Opened '{}' in embedded window").format(path_str))
+            else:
+                msg_status(_('No embedded file was found'))
 
 
 VK_ESCAPE = 27
