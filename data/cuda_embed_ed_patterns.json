@@ -7,7 +7,8 @@
     //"lexers": ["HTML"],
     
     // list of regex patterns
-    // path is extracted from a named group: path, so every patter must contain one
+    // file path is extracted from a named regex group with the name "path",
+    //   so every pattern must contain this named group
     "path_patterns":[
       "\"(?P<path>[^\"]+)\""
     ]
