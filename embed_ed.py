@@ -23,6 +23,26 @@ BTN_NEW_TAB = 'to_new_tab'
 GAP_TAG = app_proc(PROC_GET_UNIQUE_TAG, '')
 USER_DIR = os.path.expanduser('~')
 
+
+# 3rd-party API
+def open_file_embedded(filepath, nline, caption=None):
+    """ filepath - full path to file to be opened in an embedded Editor
+        nline - line index in the current Editor, below which new editor will be added
+        caption - optional
+    """
+    import json
+
+    args = {
+        'full_path': filepath,
+        'nline': nline,
+        'caption': caption,
+    }
+
+    Command._args = args
+
+    app_proc(PROC_EXEC_PLUGIN, 'cuda_embed_ed,open_file,')
+
+
 def collapse_path(path):
     if path  and  (path + os.sep).startswith(USER_DIR + os.sep):
         path = path.replace(USER_DIR, '~', 1)
@@ -49,6 +69,8 @@ def detect_lex(path):
 
 
 class Command:
+
+    _args = None
 
     def __init__(self):
         self._ed_hints = {} # editor handle -> Hint()
@@ -171,6 +193,14 @@ class Command:
 
         return self._ed_hints.get(h_ed)
 
+    def _open_file(self, embed, full_path, nline, caption=None):
+        if os.path.exists(full_path):
+            embed.show(full_path, nline=nline, caption=caption)
+
+            msg_status(_("Opened '{}' in embedded window").format(caption or full_path))
+        else:
+            msg_status(_('Linked file was not found: {}').format(full_path))
+
 
     # menu command
     def toggle(self):
@@ -196,12 +226,23 @@ class Command:
                 return
             full_path = os.path.join(os.path.dirname(ed_fn), path_str)
 
-            if os.path.exists(full_path):
-                embed.show(full_path, nline=caret_y, caption=path_str)
+            self._open_file(embed, full_path, nline=caret_y, caption=path_str)
 
-                msg_status(_("Opened '{}' in embedded window").format(path_str))
-            else:
-                msg_status(_('Linked file was not found: {}').format(full_path))
+
+    def open_file(self):
+        j = Command._args
+        Command._args = None
+        full_path = j['full_path']
+        nline =     j['nline']
+        caption =   j['caption']
+
+        embed = self._get_ed_embed(ed, create=True)
+
+        if embed.is_visible:    # hide old if open
+            embed.hide()
+
+        self._open_file(embed, full_path, nline=nline, caption=caption)
+
 
 
 VK_ESCAPE = 27

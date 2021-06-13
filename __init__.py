@@ -1,1 +1,1 @@
-from .embed_ed import Command
+from .embed_ed import Command, open_file_embedded
