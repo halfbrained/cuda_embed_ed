@@ -163,13 +163,6 @@ class Command:
                         except IndexError:
                             pass    # error is printed in `load_config()`
 
-
-        tl,tr = tline[:caret_x], tline[caret_x:]  # text to left|right of caret
-        if '"' in tl  and '"' in tr:
-            fn_start = tl.rindex('"') + 1
-            fn_end = caret_x + tr.index('"')
-            return tline[fn_start:fn_end]
-
     def _get_ed_embed(self, _ed, create=False):
         h_ed = _ed.get_prop(PROP_HANDLE_SELF)
 
