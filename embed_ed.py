@@ -1,14 +1,20 @@
 import os
 import time
+import re
 
 from cudatext import *
-from cudax_lib import get_translation
+from cudax_lib import get_translation, _json_loads
 
 _   = get_translation(__file__)  # I18N
 
 fn_config = os.path.join(app_path(APP_DIR_SETTINGS), 'plugins.ini')
+fn_config_patters = os.path.join(app_path(APP_DIR_SETTINGS), 'cuda_embed_ed_patterns.json')
+_plugin_dir = os.path.dirname(os.path.realpath(__file__))
+fn_default_patterns = os.path.join(_plugin_dir, 'data', 'cuda_embed_ed_patterns.json')
+
 
 ED_MAX_LINES = 24
+PATTERNS = {}
 
 BTN_SAVE = 'btn_em_save'
 BTN_CLOSE = 'btn_em_close'
@@ -45,14 +51,68 @@ def detect_lex(path):
 class Command:
 
     def __init__(self):
+        self._ed_hints = {} # editor handle -> Hint()
+
+        self.load_config()
+
+    def load_config(self):
         global ED_MAX_LINES
+
         ED_MAX_LINES = int(ini_read(fn_config, 'embedded_editor', 'editor_max_lines', str(ED_MAX_LINES)))
 
-        self._ed_hints = {} # editor handle -> Hint()
+        # load lexer path-patterns, compile regexes
+        PATTERNS.clear()
+
+        _patterns_path = fn_config_patters  if os.path.exists(fn_config_patters) else  fn_default_patterns
+        with open(_patterns_path, 'r', encoding='utf-8') as f:
+            s_patterns = f.read()
+
+        jpatterns = _json_loads(s_patterns)
+        for name,group in jpatterns.copy().items():
+            ps = group.get('path_patterns')
+            if isinstance(ps, list):
+                ps_copy = ps[:]
+                ps.clear()
+
+                for pattern in ps_copy:
+                    if '(?P<path>' not in pattern:
+                        print(_('NOTE: pattern ({}) in group "{}" is missing a named group "path":')
+                                    .format(pattern, name))
+                        continue
+
+                    try:
+                        ps.append(re.compile(pattern))
+                    except re.error:
+                        print(_('NOTE: failed to compile pattern in group "{}": {}').format(name, pattern))
+
+                # bring lexer names to lower-case
+                if 'lexers' in group:
+                    lexers = group['lexers']
+                    if isinstance(lexers, list):
+                        group['lexers'] = set(map(str.lower,  lexers))
+                    else:
+                        del jpatterns[name]
+                        print(_('NOTE: invalid "lexers" in group: {}. Should be a list').format(name))
+            else:
+                del jpatterns[name]
+                print(_('NOTE: invalid patterns in group: {}. Should be a list').format(name))
+
+        PATTERNS.update(jpatterns)
+
 
     def config(self):
         ini_write(fn_config, 'embedded_editor', 'editor_max_lines', str(ED_MAX_LINES))
         file_open(fn_config)
+
+    def config_patterns(self):
+        if not os.path.exists(fn_config_patters):
+            with open(fn_default_patterns, 'r', encoding='utf-8') as f:
+                s_patterns = f.read()
+            with open(fn_config_patters, 'w', encoding='utf-8') as f:
+                f.write(s_patterns)
+
+        file_open(fn_config_patters)
+
 
     def on_close_pre(self, ed_self):
         """ if closed Editor has 'embed' with unsaved text - give prompt to save|cancel|ignore
@@ -82,8 +142,28 @@ class Command:
             embed.restore_scroll_pos(delay=False)
 
     def _get_caret_filepath(self, caret_x, caret_y):
-        # get text between (")
+        """ find matching pattern in line under caret, extract file-path
+        """
         tline = ed.get_text_line(caret_y)    # text line
+        for name,dpatterns in PATTERNS.items(): # test each pattern group again the line
+            lex = ed.get_prop(PROP_LEXER_FILE)
+            if lex:
+                lex = lex.lower()
+            pattern_lexers = dpatterns.get('lexers')
+            if pattern_lexers  and  lex not in pattern_lexers:
+                continue
+
+            ps = dpatterns.get('path_patterns')
+            for pattern in ps:
+                for match in pattern.finditer(tline): # check if match contains the caret position
+                    span = match.span()
+                    if span[0] <= caret_x <= span[1]: # caret is in match's range
+                        try:
+                            return match.group('path')
+                        except IndexError:
+                            pass    # error is printed in `load_config()`
+
+
         tl,tr = tline[:caret_x], tline[caret_x:]  # text to left|right of caret
         if '"' in tl  and '"' in tr:
             fn_start = tl.rindex('"') + 1
@@ -119,6 +199,7 @@ class Command:
 
             path_str = self._get_caret_filepath(caret_x, caret_y)
             if not path_str:
+                msg_status(_('No embedded file-path was found'))
                 return
             full_path = os.path.join(os.path.dirname(ed_fn), path_str)
 
@@ -127,7 +208,7 @@ class Command:
 
                 msg_status(_("Opened '{}' in embedded window").format(path_str))
             else:
-                msg_status(_('No embedded file was found'))
+                msg_status(_('Linked file was not found: {}').format(full_path))
 
 
 VK_ESCAPE = 27

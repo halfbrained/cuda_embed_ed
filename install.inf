@@ -20,3 +20,9 @@ section=commands
 caption=Embedded Editor\Config
 method=config
 menu=o
+
+[item4]
+section=commands
+caption=Embedded Editor\Config patterns
+method=config_patterns
+menu=o

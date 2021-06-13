@@ -1,0 +1,21 @@
+{
+  // group name - any string
+  "global": {
+  
+    // limit group patterns to a list of lexers
+    // if absent - will be applied to all documents
+    //"lexers": ["HTML"],
+    
+    // list of regex patterns
+    // path is extracted from a named group: path, so every patter must contain one
+    "path_patterns":[
+      "\"(?P<path>[^\"]+)\""
+    ]
+  },
+  "Pascal": {
+    "lexers": ["Pascal"],
+    "path_patterns":[
+      "{\\$[Ii] (?P<path>[^}]+)}"
+    ] 
+  }
+}
