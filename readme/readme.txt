@@ -28,6 +28,13 @@ Section: [embedded_editor].
 2) File "cuda_embed_ed_patterns.json", to configure search patterns.
 It has some default content so it is self-documented.
 
+Main options description:
+* editor_max_lines - size of embedded editor in text lines
+* show_line_num - show line numbers; possible values:
+	0 - hide
+	1 - show
+	2 - use CudaText settings (default)
+
 About
 -----
 Author: Shovel, https://github.com/halfbrained/

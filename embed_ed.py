@@ -3,6 +3,7 @@ import time
 import re
 
 from cudatext import *
+import cudax_lib
 from cudax_lib import get_translation, _json_loads
 
 _   = get_translation(__file__)  # I18N
@@ -14,12 +15,14 @@ fn_default_patterns = os.path.join(_plugin_dir, 'data', 'cuda_embed_ed_patterns.
 
 
 ED_MAX_LINES = 24
+SHOW_GUTTER_NUM = 2 # 0: False, 1: True, 2: app settings
 PATTERNS = {}
 
 BTN_SAVE = 'btn_em_save'
 BTN_CLOSE = 'btn_em_close'
 BTN_NEW_TAB = 'to_new_tab'
 
+OPT_SECTION = 'embedded_editor'
 GAP_TAG = app_proc(PROC_GET_UNIQUE_TAG, '')
 USER_DIR = os.path.expanduser('~')
 
@@ -79,8 +82,10 @@ class Command:
 
     def load_config(self):
         global ED_MAX_LINES
+        global SHOW_GUTTER_NUM
 
-        ED_MAX_LINES = int(ini_read(fn_config, 'embedded_editor', 'editor_max_lines', str(ED_MAX_LINES)))
+        ED_MAX_LINES = int(ini_read(fn_config, OPT_SECTION, 'editor_max_lines', str(ED_MAX_LINES)))
+        SHOW_GUTTER_NUM = int(ini_read(fn_config, OPT_SECTION, 'show_line_num', str(SHOW_GUTTER_NUM)))
 
         # load lexer path-patterns, compile regexes
         PATTERNS.clear()
@@ -123,7 +128,8 @@ class Command:
 
 
     def config(self):
-        ini_write(fn_config, 'embedded_editor', 'editor_max_lines', str(ED_MAX_LINES))
+        ini_write(fn_config, OPT_SECTION, 'editor_max_lines', str(ED_MAX_LINES))
+        ini_write(fn_config, OPT_SECTION, 'show_line_num', str(SHOW_GUTTER_NUM))
         file_open(fn_config)
 
     def config_patterns(self):
@@ -349,9 +355,26 @@ class Hint:
         _lex = detect_lex(full_path)
         self.ed.set_prop(PROP_LEXER_FILE, _lex)
 
+        # target document gutter options
+        gutter_show = cudax_lib.get_opt('gutter_show', lev=cudax_lib.CONFIG_LEV_LEX, lexer=_lex)
+        self.ed.set_prop(PROP_GUTTER_ALL, gutter_show)
+        if gutter_show:
+            bm =    cudax_lib.get_opt('gutter_bookmarks', lev=cudax_lib.CONFIG_LEV_LEX, lexer=_lex)
+            fold =  cudax_lib.get_opt('gutter_fold',      lev=cudax_lib.CONFIG_LEV_LEX, lexer=_lex)
+            self.ed.set_prop(PROP_GUTTER_BM, bm)
+            self.ed.set_prop(PROP_GUTTER_FOLD, fold)
+            # line numbers
+            if SHOW_GUTTER_NUM == 2:
+                gt_num = cudax_lib.get_opt('numbers_show', lev=cudax_lib.CONFIG_LEV_LEX, lexer=_lex)
+            else:
+                gt_num = bool(SHOW_GUTTER_NUM)
+            self.ed.set_prop(PROP_GUTTER_NUM, gt_num)
+
+
         self.ed.set_text_all(text)
         self.ed.set_prop(PROP_MODIFIED, False)
         self.ed.set_prop(PROP_LINE_TOP, 0)
+
 
         self.reset_line_states(LINESTATE_NORMAL)
         self.restore_scroll_pos()

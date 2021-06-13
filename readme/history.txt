@@ -1,5 +1,7 @@
 2021.06.13
 + add: custom path patterns
++ add: api for other plugins to open embedded documents: open_file_embedded()
++ add: option show/hide/ignore line numbers
 
 2021.06.11
 + add: button "To new tab"
