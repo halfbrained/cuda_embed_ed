@@ -1,28 +1,32 @@
 Plugin for CudaText.
+Shows "included" file in embedded editor - additional editor UI control is
+shown between the text lines.
+For example, you can open included .css / .js files while editing the HTML file.
 
-Shows documents in an embedded editor. For example '.js' and '.css' files in HTML.
+Adds menu item to show/hide embedded editor in the current document, for the
+current caret position: "Plugins > Embedded Editor > Toggle".
 
-Adds menu item to show/hide embedded editor in the current document:
-    "Plugins > Embedded Editor > Toggle"
+By default, plugin searches for the included filename inside double-quotes,
+surrounding the caret position. This works OK for HTML and many other documents.
 
-
-Searches for a relative path according to configurable set of patterns under caret's position. 
-By default it's a path between quotation marks (") globally, and a Pascal-lexer specific format.
-
-So if file is opened: 
-    "/folder/file.html" 
+For example, when you have opened file "/folder/file.html", and placed caret
+inside first double-quotes: 
+  <link href="css/style.css" rel="stylesheet" type="text/css"/>
+then embedded editor will be opened for file "/folder/css/style.css".
     
- and an embedded editor is opened in `href` value in text:
-    <link href="css/style.css" rel="stylesheet" type="text/css"/>
-    
- following file will be shown:
-    "/folder/css/style.css"
-    
-    
-Patterns can be edited via main menu:
-	"Options > Settings-plugins > Embedded Editor > Config patterns"
-	
-Comments in the config descibe the format.
+The search can be configured, though. For example, plugin can be used in Pascal
+files for comments like {$I filename.inc}.
+
+Configuration
+-------------
+
+Plugin has 2 config files, you will see 2 menu items in the
+"Options > Settings-plugins > Embedded Editor".
+
+1) File settings/plugins.ini (it is shared by many plugins).
+Section: [embedded_editor].
+2) File "cuda_embed_ed_patterns.json", to configure search patterns.
+It has some default content so it is self-documented.
 
 About
 -----
