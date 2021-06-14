@@ -28,20 +28,37 @@ USER_DIR = os.path.expanduser('~')
 
 
 # 3rd-party API
-def open_file_embedded(filepath, nline, caption=None):
+def open_file_embedded(filepath, nline, caption=None, scroll_to=None, carets=None):
     """ filepath - full path to file to be opened in an embedded Editor
         nline - line index in the current Editor, below which new editor will be added
         caption - optional
+        scroll_to - tuple(x,y) position of top-left character to be visible
+        carets - carets positions, for `Editor.set_caret()`: https://wiki.freepascal.org/CudaText_API#Editor.set_caret
+            * is a list of caret positions, caret position can be [x,y] or [x0,y0, x1,y1] for selection
     """
-    import json
+    # validate arguments
+    try:
+        assert os.path.exists(filepath) and os.path.isfile(filepath), \
+                'file doesn\'t exist: '+str(filepath)
+        assert scroll_to is None  or  (isinstance(scroll_to, (tuple, list))  and  len(scroll_to) == 2), \
+                '`scroll_to` should be `None` or a tuple: (x,y)'
+        assert carets is None  or  isinstance(carets, (tuple, list)), \
+                '`carets` should be `None` or a tuple'
+        assert carets is None  or  all( isinstance(it, (tuple, list))  and  len(it) in {2,4}  for it in carets ), \
+                '`carets` elements should be tuples: (x,y) or (x0,y0, x1,y1)'
+    except AssertionError as ex:
+        print('NOTE: '+str(ex))
+        return
 
-    args = {
+    nline = max(0, min(nline, ed.get_line_count()-1 ))
+
+    Command._args = {
         'full_path': filepath,
         'nline': nline,
         'caption': caption,
+        'scroll_to': scroll_to,
+        'carets': carets,
     }
-
-    Command._args = args
 
     app_proc(PROC_EXEC_PLUGIN, 'cuda_embed_ed,open_file,')
 
@@ -69,6 +86,15 @@ def detect_lex(path):
 
     _lex_cache[path] = _lex
     return _lex
+
+def set_ed_scroll_pos(_ed, scroll_pos):
+    _ed.set_prop(PROP_SCROLL_VERT, scroll_pos[1])
+    _ed.set_prop(PROP_SCROLL_HORZ, scroll_pos[0])
+
+def set_ed_carets(_ed, carets):
+    _ed.set_caret(*carets[0], options=CARET_OPTION_NO_SCROLL)
+    for caret in carets[1:]:
+        _ed.set_caret(*caret, id=CARET_ADD, options=CARET_OPTION_NO_SCROLL)
 
 
 class Command:
@@ -241,11 +267,18 @@ class Command:
         full_path = j['full_path']
         nline =     j['nline']
         caption =   j['caption']
+        scroll_to = j['scroll_to']
+        carets =    j['carets']
 
         embed = self._get_ed_embed(ed, create=True)
 
         if embed.is_visible:    # hide old if open
             embed.hide()
+
+        if scroll_to:
+            embed.set_scroll_pos(full_path, scroll_to)
+        if carets:
+            embed.set_carets(full_path, carets)
 
         self._open_file(embed, full_path, nline=nline, caption=caption)
 
@@ -266,6 +299,7 @@ class Hint:
         self._enabled = False   # to skip commands during animation
         self._sb_fn_modified = None
         self._scroll_poss = {} # path -> (scroll x, scroll y)
+        self._carets = {}       # path -> list of [x,y] or [x0,y0, x1,y1]
 
         self._h_to_free = None
 
@@ -333,7 +367,7 @@ class Hint:
 
     def show(self, full_path, nline, caption=None):
 
-        if not full_path  or  not nline  or  not os.path.exists(full_path):
+        if not full_path  or  not os.path.exists(full_path):
             return
 
         if self._h_to_free:
@@ -385,6 +419,8 @@ class Hint:
         ed_size_x = r - l # text area sizes - to not obscure other ed-controls
 
         caret_loc_px = ed.convert(CONVERT_CARET_TO_PIXELS, x=1, y=nline)
+        if caret_loc_px is None:
+            caret_loc_px = (0, 0)
         y0,y1 = caret_loc_px[1], b
         h = min(FORM_H,  y1-y0 - cell_h)
         w = ed_size_x # full width
@@ -492,14 +528,10 @@ class Hint:
         file_open(self.full_path)
 
         if scroll_pos:
-            ed.set_prop(PROP_SCROLL_VERT, scroll_pos[1])
-            ed.set_prop(PROP_SCROLL_HORZ, scroll_pos[0])
+            set_ed_scroll_pos(ed, scroll_pos)
 
         if carets:
-            ed.set_caret(*carets[0], options=CARET_OPTION_NO_SCROLL)
-            for caret in carets[1:]:
-                ed.set_caret(*caret, id=CARET_ADD, options=CARET_OPTION_NO_SCROLL)
-
+            set_ed_carets(ed, carets)
 
     def save_text(self, dlg=False):
         """ returns: cancel save
@@ -566,10 +598,19 @@ class Hint:
     def save_scroll_pos(self):
         if self.full_path and self.h:
             scrol_pos = (self.ed.get_prop(PROP_SCROLL_HORZ), self.ed.get_prop(PROP_SCROLL_VERT))
-            self._scroll_poss[self.full_path] = scrol_pos
+            self.set_scroll_pos(self.full_path, scrol_pos)
+
+    def set_scroll_pos(self, full_path, scrol_pos):
+        self._scroll_poss[full_path] = scrol_pos
+
+    def set_carets(self, full_path, _carets):
+        """ carets will be applied when the document is opened next time
+        """
+        self._carets[full_path] = _carets
+
 
     def restore_scroll_pos(self, delay=True):
-        """ starts timer to restore scroplll position
+        """ starts timer to restore scroll position
         """
         if delay:
             callback = 'module=cuda_embed_ed;cmd=on_restore_pos;'
@@ -578,8 +619,12 @@ class Hint:
         else:
             _scroll_pos = self._scroll_poss.get(self.full_path)
             if _scroll_pos:
-                self.ed.set_prop(PROP_SCROLL_VERT, _scroll_pos[1])
-                self.ed.set_prop(PROP_SCROLL_HORZ, _scroll_pos[0])
+                set_ed_scroll_pos(self.ed, _scroll_pos)
+
+            _carets = self._carets.pop(self.full_path, None)
+            if _carets:
+                set_ed_carets(self.ed, _carets)
+
 
     def reset_line_states(self, target_state):
         """ reset modified lines states to one of `LINESTATE_nnn`

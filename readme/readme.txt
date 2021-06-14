@@ -41,11 +41,15 @@ API for other plugins
 Plugins can use such API:
 
     from cuda_embed_ed import open_file_embedded
-    open_file_embedded('/media/q/readme.txt', 13, 'CAPTION')
+    open_file_embedded('/media/q/readme.txt', 13)
     
 * first argument is an absolute path to a text file to open
 * second - line after which to insert the embedded editor
-* third - optional caption to show instead of the full path
+Optional arguments:
+* caption - caption to show instead of the full path
+* scroll_to - tuple(x,y) character and line indexes, scroll position in the opened document
+* carets - carets positions, a list of caret positions, caret position can be [x,y] or 
+        [x0,y0, x1,y1] for selection
 
 
 About
