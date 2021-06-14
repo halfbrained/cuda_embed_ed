@@ -226,15 +226,10 @@ class Command:
     def _open_file(self, embed, full_path, nline, caption=None):
         file_exists = os.path.exists(full_path)
         if not file_exists:
-            print(f'doesnt exist: {full_path}')
-
             is_windows = not app_proc(PROC_GET_OS_SUFFIX, '') # empty => windows
             has_slash = '\\' in full_path
-            print(f'is win: {is_windows}, has slash: {has_slash}')
             if not is_windows  and  '\\' in full_path:
                 alt_path = full_path.replace('\\', '/')
-                print(f'testing altpath: {alt_path}, exists: {os.path.exists(alt_path)}')
-
                 if os.path.exists(alt_path):
                     full_path = alt_path
                     file_exists = True
