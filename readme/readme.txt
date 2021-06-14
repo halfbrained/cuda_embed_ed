@@ -13,7 +13,7 @@ For example, when you have opened file "/folder/file.html", and placed caret
 inside first double-quotes: 
   <link href="css/style.css" rel="stylesheet" type="text/css"/>
 then embedded editor will be opened for file "/folder/css/style.css".
-    
+	
 The search can be configured, though. For example, plugin can be used in Pascal
 files for comments like {$I filename.inc}.
 
@@ -34,6 +34,19 @@ Main options description:
 	0 - hide
 	1 - show
 	2 - use CudaText settings (default)
+	
+
+API for other plugins
+---------------------
+Plugins can use such API:
+
+    from cuda_embed_ed import open_file_embedded
+    open_file_embedded('/media/q/readme.txt', 13, 'CAPTION')
+    
+* first argument is an absolute path to a text file to open
+* second - line after which to insert the embedded editor
+* third - optional caption to show instead of the full path
+
 
 About
 -----
