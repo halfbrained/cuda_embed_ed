@@ -13,7 +13,7 @@ For example, when you have opened file "/folder/file.html", and placed caret
 inside first double-quotes: 
   <link href="css/style.css" rel="stylesheet" type="text/css"/>
 then embedded editor will be opened for file "/folder/css/style.css".
-	
+    
 The search can be configured, though. For example, plugin can be used in Pascal
 files for comments like {$I filename.inc}.
 
@@ -28,10 +28,10 @@ Section [embedded_editor].
 Options description:
 * "editor_max_lines" - height of embedded editor in text lines
 * "show_line_num" - how to show line numbers; possible values:
-	0 - hide
-	1 - show
-	2 - use CudaText settings (default)
-	
+    0 - hide
+    1 - show
+    2 - use CudaText settings (default)
+    
 2) File "cuda_embed_ed_patterns.json", to configure search patterns.
 It has some default content so it is self-documented.
 
