@@ -38,8 +38,6 @@ def open_file_embedded(filepath, nline, caption=None, scroll_to=None, carets=Non
     """
     # validate arguments
     try:
-        assert os.path.exists(filepath) and os.path.isfile(filepath), \
-                'file doesn\'t exist: '+str(filepath)
         assert scroll_to is None  or  (isinstance(scroll_to, (tuple, list))  and  len(scroll_to) == 2), \
                 '`scroll_to` should be `None` or a tuple: (x,y)'
         assert carets is None  or  isinstance(carets, (tuple, list)), \
@@ -226,7 +224,22 @@ class Command:
         return self._ed_hints.get(h_ed)
 
     def _open_file(self, embed, full_path, nline, caption=None):
-        if os.path.exists(full_path):
+        file_exists = os.path.exists(full_path)
+        if not file_exists:
+            print(f'doesnt exist: {full_path}')
+
+            is_windows = not app_proc(PROC_GET_OS_SUFFIX, '') # empty => windows
+            has_slash = '\\' in full_path
+            print(f'is win: {is_windows}, has slash: {has_slash}')
+            if not is_windows  and  '\\' in full_path:
+                alt_path = full_path.replace('\\', '/')
+                print(f'testing altpath: {alt_path}, exists: {os.path.exists(alt_path)}')
+
+                if os.path.exists(alt_path):
+                    full_path = alt_path
+                    file_exists = True
+
+        if file_exists:
             embed.show(full_path, nline=nline, caption=caption)
 
             msg_status(_("Opened '{}' in embedded window").format(caption or full_path))
