@@ -38,11 +38,16 @@ Main options description:
 
 API for other plugins
 ---------------------
-Plugins can use such API:
+Plugins can use such API to open the embedded editor for any
+given filename inside the current document:
 
-    from cuda_embed_ed import open_file_embedded
-    open_file_embedded('/media/q/readme.txt', 13)
-    
+    try:
+        from cuda_embed_ed import open_file_embedded
+        open_file_embedded('/media/q/readme.txt', 13)
+    except ImportError:
+        msg_status('Plugin "Embedded Editor" is not installed')    
+
+`open_file_embedded`:
 * first argument is an absolute path to a text file to open
 * second - line after which to insert the embedded editor
 Optional arguments:
