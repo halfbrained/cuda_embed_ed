@@ -172,7 +172,7 @@ class Command:
         embed = self._get_ed_embed(ed_self)
         if embed  and  embed.is_visible:
             if embed.text_modified:
-                cancel_close = embed.save_text(dlg=True)
+                cancel_close = embed.save_text(force=False)
                 if cancel_close:
                     return False    # "return false to cancel closing"
 
@@ -417,6 +417,8 @@ class Hint:
         self.ed.set_prop(PROP_MODIFIED, False)
         self.ed.set_prop(PROP_LINE_TOP, 0)
 
+        if not os.access(full_path, os.W_OK):
+            self.ed.set_prop(PROP_RO, True)
 
         self.reset_line_states(LINESTATE_NORMAL)
         self.restore_scroll_pos()
@@ -490,7 +492,10 @@ class Hint:
         collapsed_path = collapse_path(self.full_path)
 
         add_statusbar_cell(_('To new tab'), cellwidth, callback_name=BTN_NEW_TAB)
-        add_statusbar_cell(_('Save'), cellwidth, callback_name=BTN_SAVE)
+
+        _save_callback = BTN_SAVE  if not self.ed.get_prop(PROP_RO) else None
+        add_statusbar_cell(_('Save'), cellwidth, callback_name=_save_callback)
+
         _caption = (self.caption  or  collapsed_path)
         if self.text_modified:
             _caption = '*' + _caption
@@ -504,7 +509,7 @@ class Hint:
 
     def on_btn(self, name):
         if   name == BTN_SAVE:
-            self.save_text()
+            self.save_text(force=True)
         elif name == BTN_CLOSE:
             self.hide()
         elif name == BTN_NEW_TAB:
@@ -541,10 +546,13 @@ class Hint:
         if carets:
             set_ed_carets(ed, carets)
 
-    def save_text(self, dlg=False):
+    def save_text(self, force):
         """ returns: cancel save
         """
-        if dlg  and  self.text_modified:
+        if not force:
+            if not self.text_modified:
+                return
+
             _filename = os.path.basename(self.full_path)
             msg = _('Text is modified:\n{}\n\nSave it first?').format(_filename)
             result = msg_box(msg, MB_YESNOCANCEL or MB_ICONQUESTION)
@@ -570,7 +578,7 @@ class Hint:
             return
 
         if not skip_save:
-            cancel = self.save_text(dlg=True)
+            cancel = self.save_text(force=False)
             if cancel:
                 return
 
