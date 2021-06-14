@@ -13,7 +13,7 @@ For example, when you have opened file "/folder/file.html", and placed caret
 inside first double-quotes: 
   <link href="css/style.css" rel="stylesheet" type="text/css"/>
 then embedded editor will be opened for file "/folder/css/style.css".
-    
+
 The search can be configured, though. For example, plugin can be used in Pascal
 files for comments like {$I filename.inc}.
 
@@ -37,6 +37,7 @@ It has some default content so it is self-documented.
 
 API for other plugins
 ---------------------
+
 Plugins can use such API to open the embedded editor for any
 given filename inside the current document:
 
