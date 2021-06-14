@@ -23,18 +23,17 @@ Configuration
 Plugin has 2 config files, you will see 2 menu items in the
 "Options > Settings-plugins > Embedded Editor".
 
-1) File settings/plugins.ini (it is shared by many plugins).
-Section: [embedded_editor].
-2) File "cuda_embed_ed_patterns.json", to configure search patterns.
-It has some default content so it is self-documented.
-
-Main options description:
-* editor_max_lines - size of embedded editor in text lines
-* show_line_num - show line numbers; possible values:
+1) File "plugins.ini" (shared by many plugins).
+Section [embedded_editor].
+Options description:
+* "editor_max_lines" - height of embedded editor in text lines
+* "show_line_num" - how to show line numbers; possible values:
 	0 - hide
 	1 - show
 	2 - use CudaText settings (default)
 	
+2) File "cuda_embed_ed_patterns.json", to configure search patterns.
+It has some default content so it is self-documented.
 
 API for other plugins
 ---------------------
@@ -43,17 +42,17 @@ given filename inside the current document:
 
     try:
         from cuda_embed_ed import open_file_embedded
-        open_file_embedded('/media/q/readme.txt', 13)
+        open_file_embedded(file_name, line_index)
     except ImportError:
         msg_status('Plugin "Embedded Editor" is not installed')    
 
-`open_file_embedded`:
-* first argument is an absolute path to a text file to open
-* second - line after which to insert the embedded editor
-Optional arguments:
-* caption - caption to show instead of the full path
-* scroll_to - tuple(x,y) character and line indexes, scroll position in the opened document
-* carets - carets positions, a list of caret positions, caret position can be [x,y] or 
+open_file_embedded() parameters:
+* 1st - full path to a text file to open
+* 2nd - line index after which to insert the embedded editor
+Optional parameters:
+* "caption" - caption to show instead of the full path
+* "scroll_to" - tuple (x,y), character and line indexes, scroll position in the opened document
+* "carets" - carets positions, a list of caret positions, caret position can be [x,y] or 
         [x0,y0, x1,y1] for selection
 
 
